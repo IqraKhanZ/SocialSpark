@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>SocialSpark — Social Fitness Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0A0A0A;
+      --card:      #111111;
+      --card2:     #1C1C1C;
+      --card3:     #242424;
+      --orange:    #F63B05;
+      --orange-dim:rgba(246,59,5,0.14);
+      --orange-dim2:rgba(246,59,5,0.08);
+      --white:     #FFFFFF;
+      --cream:     #FFFAE5;
+      --gray:      #555555;
+      --lgray:     #999999;
+      --border:    #2A2A2A;
+      --green:     #22C55E;
+      --blue:      #3B82F6;
+      --purple:    #8B5CF6;
+      --font:      'Plus Jakarta Sans', sans-serif;
+      --radius:    16px;
+      --radius-sm: 10px;
+      --shadow:    0 8px 32px rgba(0,0,0,0.5);
+    }
+    html, body { height: 100%; background: #050505; font-family: var(--font); overflow: hidden; }
+
+    /* ── Device Wrapper (phone frame on desktop) ─────────────────────── */
+    .device-wrapper {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .app-shell {
+      width: 390px; height: 844px; background: var(--bg);
+      border-radius: 44px; overflow: hidden; position: relative;
+      box-shadow: 0 0 0 10px #1A1A1A, 0 0 0 11px #2A2A2A, 0 40px 80px rgba(0,0,0,0.8);
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Status Bar ───────────────────────────────────────────────────── */
+    .status-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 24px 4px;
+      font-size: 12px; font-weight: 700; color: var(--white);
+      flex-shrink: 0; background: var(--bg);
+    }
+    .status-icons { display: flex; gap: 6px; align-items: center; }
+    .status-icons svg { width:14px; height:14px; fill: var(--white); }
+
+    /* ── Screen Container ─────────────────────────────────────────────── */
+    .screen-container { flex: 1; overflow: hidden; position: relative; }
+    .screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg);
+      opacity: 0; pointer-events: none;
+      transform: translateX(30px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+    .screen.active {
+      opacity: 1; pointer-events: auto; transform: translateX(0);
+    }
+    .screen.slide-from-left { transform: translateX(-30px); }
+    .screen::-webkit-scrollbar { display: none; }
+
+    /* ── Bottom Navigation ────────────────────────────────────────────── */
+    .bottom-nav {
+      height: 72px; background: #0E0E0E;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-around;
+      padding: 0 8px 8px; flex-shrink: 0;
+      transition: transform 0.3s ease;
+    }
+    .bottom-nav.hidden { transform: translateY(100%); display: none; }
+    .nav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: none; border: none; cursor: pointer;
+      padding: 8px 14px; border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .nav-btn svg { width: 22px; height: 22px; stroke: var(--gray); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s; }
+    .nav-btn span { font-size: 10px; font-weight: 600; color: var(--gray); transition: color 0.2s; }
+    .nav-btn.active svg { stroke: var(--orange); }
+    .nav-btn.active span { color: var(--orange); }
+    .nav-center-btn {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--orange); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 24px rgba(246,59,5,0.5);
+      margin-top: -20px;
+    }
+    .nav-center-btn svg { width: 26px; height: 26px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Shared UI Components ─────────────────────────────────────────── */
+    .screen-pad { padding: 16px 20px; }
+    .section-title { font-size: 17px; font-weight: 800; color: var(--white); margin-bottom: 14px; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+    .btn-primary {
+      width: 100%; padding: 16px; border-radius: var(--radius);
+      background: var(--orange); border: none; cursor: pointer;
+      font-family: var(--font); font-size: 16px; font-weight: 800; color: white;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(246,59,5,0.35);
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-ghost {
+      width: 100%; padding: 14px; border-radius: var(--radius);
+      background: transparent; border: 1.5px solid var(--border); cursor: pointer;
+      font-family: var(--font); font-size: 15px; font-weight: 600; color: var(--lgray);
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+      background: var(--card2); color: var(--lgray);
+      border: 1.5px solid var(--border); cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .chip.active { background: var(--orange-dim); color: var(--orange); border-color: var(--orange); }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+    .badge-orange { background: var(--orange-dim); color: var(--orange); }
+    .badge-green  { background: rgba(34,197,94,0.15); color: var(--green); }
+
+    /* ── XP Bar ───────────────────────────────────────────────────────── */
+    .xp-bar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .xp-bar-fill  { height: 100%; background: linear-gradient(90deg, var(--orange), #FF7A50); border-radius: 3px; transition: width 1s ease; }
+
+    /* ── Event Card ───────────────────────────────────────────────────── */
+    .event-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); overflow: hidden;
+      cursor: pointer; transition: transform 0.2s;
+    }
+    .event-card:active { transform: scale(0.98); }
+    .event-card-banner { height: 110px; position: relative; }
+    .event-card-body { padding: 12px 14px 14px; }
+    .event-card-title { font-size: 15px; font-weight: 800; color: var(--white); margin-bottom: 5px; }
+    .event-card-meta { font-size: 12px; color: var(--lgray); display: flex; align-items: center; gap: 6px; }
+    .event-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+
+    /* ── Horizontal scroll row ─────────────────────────────────────────── */
+    .hscroll { display: flex; gap: 12px; overflow-x: auto; padding: 4px 20px 8px; margin: 0 -20px; }
+    .hscroll::-webkit-scrollbar { display: none; }
+
+    /* ── Profile Ring ─────────────────────────────────────────────────── */
+    .score-ring-container { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+    .score-ring-svg { transform: rotate(-90deg); }
+    .score-ring-bg { fill: none; stroke: var(--card2); }
+    .score-ring-val { fill: none; stroke: var(--orange); stroke-linecap: round; transition: stroke-dashoffset 2s cubic-bezier(0.4,0,0.2,1); }
+    .score-center { position: absolute; text-align: center; }
+    .score-num { font-size: 28px; font-weight: 900; color: var(--white); line-height: 1; }
+    .score-label { font-size: 10px; font-weight: 700; color: var(--lgray); letter-spacing: 1px; margin-top: 2px; }
+
+    /* ── Toast ────────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--card2); color: var(--white);
+      padding: 12px 20px; border-radius: 24px;
+      font-size: 13px; font-weight: 700; white-space: nowrap;
+      border: 1px solid var(--border);
+      opacity: 0; transition: all 0.3s;
+      z-index: 9999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 1: WELCOME / SPLASH
+    ═══════════════════════════════════════════════════════════════════ */
+    #s-welcome { justify-content: flex-end; padding-bottom: 40px; overflow: hidden; }
+    .welcome-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(246,59,5,0.18) 0%, transparent 70%),
+                  var(--bg);
+    }
+    .welcome-nodes {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .w-node {
+      position: absolute; border-radius: 50%;
+      background: var(--orange-dim); border: 1px solid rgba(246,59,5,0.25);
+      animation: pulse-node 4s ease-in-out infinite;
+    }
+    @keyframes pulse-node { 0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(1.2);opacity:1} }
+    .welcome-content {
+      position: relative; z-index: 2;
+      padding: 24px 28px 0;
+    }
+    .welcome-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+    .logo-spark {
+      width: 44px; height: 44px; background: var(--orange);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .logo-spark svg { width: 26px; height: 26px; fill: white; }
+    .logo-name { font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.5px; }
+    .logo-name span { color: var(--orange); }
+    .welcome-headline { font-size: 38px; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 16px; }
+    .welcome-headline em { color: var(--orange); font-style: normal; }
+    .welcome-sub { font-size: 15px; color: var(--lgray); line-height: 1.5; margin-bottom: 36px; }
+    .welcome-stats { display: flex; gap: 24px; margin-bottom: 36px; }
+    .w-stat-val { font-size: 22px; font-weight: 900; color: var(--white); }
+    .w-stat-lbl { font-size: 11px; color: var(--lgray); margin-top: 2px; }
+    .welcome-divider { width: 1px; background: var(--border); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 2: INTERESTS
+    ═══════════════════════════════════════════════════════════════════ */
+    .onb-header { padding: 24px 20px 16px; }
+    .onb-header h2 { font-size: 26px; font-weight: 900; color: var(--white); margin-bottom: 8px; }
+    .onb-header p { font-size: 14px; color: var(--lgray); }
+    .interests-grid { padding: 0 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .interest-tag {
+      padding: 10px 18px; border-radius: 30px;
+      background: var(--card2); border: 1.5px solid var(--border);
+      font-size: 14px; font-weight: 700; color: var(--lgray);
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+    }
+    .interest-tag.selected { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+    .interest-icon { font-size: 16px; }
+    .onb-sticky { padding: 16px 20px 24px; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 3: HOME
+    ═══════════════════════════════════════════════════════════════════ */
+    .home-header { padding: 12px 20px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+    .home-greeting { font-size: 13px; color: var(--lgray); font-weight: 500; }
+    .home-name { font-size: 22px; font-weight: 900; color: var(--white); margin-top: 2px; }
+    .notif-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--card2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      position: relative;
+    }
+    .notif-btn svg { width: 20px; height: 20px; stroke: var(--lgray); fill: none; stroke-width: 2; }
+    .notif-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); border: 2px solid var(--bg); }
+
+    /* XP Banner */
+    .xp-banner {
+      margin: 14px 20px; padding: 16px;
+      background: linear-gradient(135deg, #1A0800, #2A0D00);
+      border-radius: var(--radius); border: 1px solid rgba(246,59,5,0.3);
+    }
+    .xp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .xp-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--orange); }
+    .xp-num { font-size: 22px; font-weight: 900; color: var(--white); }
+    .xp-sub { font-size: 11px; color: var(--lgray); }
+    .level-badge { background: var(--orange); color: white; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; }
+
+    /* Quest card */
+    .quest-card {
+      margin: 0 20px 16px; padding: 14px 16px;
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); cursor: pointer;
+    }
+    .quest-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .quest-title { font-size: 14px; font-weight: 800; color: var(--white); }
+    .quest-items { display: flex; flex-direction: column; gap: 6px; }
+    .quest-item { display: flex; align-items: center; gap: 10px; }
+    .quest-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .quest-check.done { background: var(--green); border-color: var(--green); }
+    .quest-check.done svg { width: 10px; height: 10px; stroke: white; stroke-width: 3; fill: none; }
+    .quest-item-text { font-size: 12px; color: var(--lgray); }
+    .quest-item-text.done { text-decoration: line-through; color: var(--gray); }
+
+    /* Event cards in horizontal scroll */
+    .h-event-card { width: 200px; flex-shrink: 0; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+    .h-event-banner { height: 96px; position: relative; }
+    .h-event-body { padding: 10px 12px 12px; }
+    .h-event-title { font-size: 13px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+    .h-event-meta { font-size: 11px; color: var(--lgray); }
+    .h-event-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+
+    /* Volunteer card */
+    .vol-card {
+      margin: 0 20px 10px; padding: 14px 16px;
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); display: flex; gap: 14px; align-items: center;
+      cursor: pointer;
+    }
+    .vol-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .vol-icon svg { width: 24px; height: 24px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .vol-info { flex: 1; }
+    .vol-title { font-size: 14px; font-weight: 800; color: var(--white); margin-bottom: 3px; }
+    .vol-meta { font-size: 12px; color: var(--lgray); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 4: EXPLORE
+    ═══════════════════════════════════════════════════════════════════ */
+    .search-bar {
+      margin: 12px 20px; padding: 12px 16px;
+      background: var(--card2); border-radius: 14px;
+      border: 1.5px solid var(--border); display: flex; align-items: center; gap: 10px;
+    }
+    .search-bar svg { width: 18px; height: 18px; stroke: var(--gray); fill: none; stroke-width: 2; flex-shrink: 0; }
+    .search-bar input { background: none; border: none; outline: none; font-family: var(--font); font-size: 14px; color: var(--white); width: 100%; }
+    .search-bar input::placeholder { color: var(--gray); }
+    .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 20px 8px; margin: 0 -20px; }
+    .cat-scroll::-webkit-scrollbar { display: none; }
+    .events-grid { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 20px; }
+    .grid-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+    .grid-banner { height: 90px; }
+    .grid-body { padding: 10px; }
+    .grid-title { font-size: 13px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+    .grid-meta { font-size: 11px; color: var(--lgray); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 5: EVENT DETAIL (slide-up modal)
+    ═══════════════════════════════════════════════════════════════════ */
+    #s-event-detail {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg);
+      transform: translateY(100%) !important;
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1) !important;
+      opacity: 1 !important; pointer-events: none;
+      z-index: 100;
+    }
+    #s-event-detail.modal-open {
+      transform: translateY(0) !important;
+      pointer-events: auto;
+    }
+    .detail-banner { height: 230px; position: relative; }
+    .detail-back {
+      position: absolute; top: 16px; left: 16px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(0,0,0,0.6); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; z-index: 10;
+      backdrop-filter: blur(4px);
+    }
+    .detail-back svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2.5; }
+    .detail-xp-badge {
+      position: absolute; top: 16px; right: 16px;
+      background: var(--orange); color: white;
+      font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 20px;
+    }
+    .detail-body { padding: 20px; }
+    .detail-cat { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--orange); margin-bottom: 6px; }
+    .detail-title { font-size: 24px; font-weight: 900; color: var(--white); margin-bottom: 14px; line-height: 1.2; }
+    .detail-meta-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .detail-meta-row svg { width: 16px; height: 16px; stroke: var(--orange); fill: none; stroke-width: 2; flex-shrink: 0; }
+    .detail-meta-row span { font-size: 13px; color: var(--lgray); }
+    .host-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--card2); border-radius: 12px; margin: 14px 0; }
+    .host-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), #FF7A50); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: white; }
+    .host-name { font-size: 14px; font-weight: 700; color: var(--white); }
+    .host-label { font-size: 11px; color: var(--lgray); }
+    .verified-badge { margin-left: auto; background: rgba(34,197,94,0.15); color: var(--green); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+    .detail-desc { font-size: 14px; color: var(--lgray); line-height: 1.6; margin-bottom: 16px; }
+    .attendee-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .attendee-stack { display: flex; }
+    .attendee-av { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -8px; background: var(--card3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; }
+    .attendee-av:first-child { margin-left: 0; }
+    .attendee-text { font-size: 13px; color: var(--lgray); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 6: QR SCAN
+    ═══════════════════════════════════════════════════════════════════ */
+    #s-qr { background: #050505; display: flex; flex-direction: column; align-items: center; }
+    .qr-top { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; width: 100%; }
+    .qr-header-title { font-size: 17px; font-weight: 800; color: var(--white); }
+    .back-btn { background: none; border: none; cursor: pointer; padding: 8px; }
+    .back-btn svg { width: 22px; height: 22px; stroke: var(--white); fill: none; stroke-width: 2.5; }
+    .qr-viewfinder { margin: 20px; position: relative; }
+    .qr-frame { width: 260px; height: 260px; border-radius: 24px; background: var(--card); border: 2px solid var(--border); position: relative; overflow: hidden; }
+    .qr-scan-line { position: absolute; width: 100%; height: 2px; background: var(--orange); top: 0; animation: scan-anim 2s ease-in-out infinite; box-shadow: 0 0 10px var(--orange), 0 0 30px rgba(246,59,5,0.4); }
+    @keyframes scan-anim { 0%{top:10px} 50%{top:240px} 100%{top:10px} }
+    .qr-corner { position: absolute; width: 24px; height: 24px; }
+    .qr-corner.tl { top:10px; left:10px; border-top: 3px solid var(--orange); border-left: 3px solid var(--orange); border-radius: 4px 0 0 0; }
+    .qr-corner.tr { top:10px; right:10px; border-top: 3px solid var(--orange); border-right: 3px solid var(--orange); border-radius: 0 4px 0 0; }
+    .qr-corner.bl { bottom:10px; left:10px; border-bottom: 3px solid var(--orange); border-left: 3px solid var(--orange); border-radius: 0 0 0 4px; }
+    .qr-corner.br { bottom:10px; right:10px; border-bottom: 3px solid var(--orange); border-right: 3px solid var(--orange); border-radius: 0 0 4px 0; }
+    .qr-inner-pattern { position: absolute; inset: 30px; display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; opacity: 0.3; }
+    .qr-cell { background: var(--lgray); border-radius: 2px; }
+    .qr-info { text-align: center; padding: 0 30px; margin-top: 20px; }
+    .qr-info h3 { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+    .qr-info p { font-size: 14px; color: var(--lgray); line-height: 1.5; }
+    .qr-success { display: none; flex-direction: column; align-items: center; padding: 40px 30px; text-align: center; }
+    .success-ring { width: 100px; height: 100px; border-radius: 50%; background: rgba(34,197,94,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .success-ring svg { width: 50px; height: 50px; stroke: var(--green); fill: none; stroke-width: 2.5; }
+    .success-xp { font-size: 42px; font-weight: 900; color: var(--orange); margin-bottom: 6px; }
+    .success-label { font-size: 22px; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+    .success-sub { font-size: 14px; color: var(--lgray); line-height: 1.5; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 7: PROFILE
+    ═══════════════════════════════════════════════════════════════════ */
+    .profile-header { padding: 16px 20px; display: flex; align-items: center; gap: 14px; }
+    .profile-avatar { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), #FF7A50); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: white; position: relative; }
+    .profile-verified { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; background: var(--green); border-radius: 50%; border: 2px solid var(--bg); display: flex; align-items: center; justify-content: center; }
+    .profile-verified svg { width: 10px; height: 10px; stroke: white; fill: none; stroke-width: 3; }
+    .profile-name { font-size: 20px; font-weight: 900; color: var(--white); }
+    .profile-handle { font-size: 13px; color: var(--lgray); margin-top: 2px; }
+    .profile-settings { margin-left: auto; width: 36px; height: 36px; border-radius: 50%; background: var(--card2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .profile-settings svg { width: 18px; height: 18px; stroke: var(--lgray); fill: none; stroke-width: 2; }
+
+    /* Score section */
+    .score-section { margin: 0 20px 16px; padding: 20px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .score-row { display: flex; align-items: center; gap: 20px; }
+    .score-stats { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .score-stat-item { }
+    .score-stat-num { font-size: 22px; font-weight: 900; color: var(--white); }
+    .score-stat-lbl { font-size: 11px; color: var(--lgray); margin-top: 1px; }
+
+    /* Streak calendar */
+    .streak-cal { margin: 0 20px 16px; padding: 16px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .streak-days { display: flex; gap: 6px; margin-top: 12px; }
+    .streak-day { flex: 1; height: 36px; border-radius: 8px; background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--gray); flex-direction: column; gap: 2px; }
+    .streak-day.done { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(246,59,5,0.3); }
+    .streak-day.today { background: var(--orange); color: white; }
+    .streak-day-letter { font-size: 9px; font-weight: 700; }
+
+    /* Achievements */
+    .achievements-row { display: flex; gap: 10px; overflow-x: auto; padding: 4px 20px 8px; margin: 0 -20px; }
+    .achievements-row::-webkit-scrollbar { display: none; }
+    .achievement { width: 72px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .ach-icon { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .ach-icon svg { width: 26px; height: 26px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ach-label { font-size: 10px; font-weight: 700; color: var(--lgray); text-align: center; line-height: 1.2; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 8: REWARDS
+    ═══════════════════════════════════════════════════════════════════ */
+    .rewards-xp-header { margin: 12px 20px 16px; padding: 18px; background: linear-gradient(135deg, #1A0800, #2A0D00); border-radius: var(--radius); border: 1px solid rgba(246,59,5,0.3); }
+    .rewards-xp-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--orange); margin-bottom: 6px; }
+    .rewards-xp-num { font-size: 38px; font-weight: 900; color: white; }
+    .rewards-xp-sub { font-size: 13px; color: var(--lgray); margin-top: 4px; }
+    .rewards-grid { padding: 0 20px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .reward-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; cursor: pointer; transition: transform 0.2s; }
+    .reward-card:active { transform: scale(0.97); }
+    .reward-icon { width: 44px; height: 44px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; }
+    .reward-icon svg { width: 24px; height: 24px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .reward-title { font-size: 13px; font-weight: 800; color: var(--white); margin-bottom: 4px; }
+    .reward-partner { font-size: 11px; color: var(--lgray); margin-bottom: 10px; }
+    .reward-cost { font-size: 13px; font-weight: 800; color: var(--orange); }
+    .reward-cost-sub { font-size: 10px; color: var(--lgray); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SCREEN 9: LEADERBOARD
+    ═══════════════════════════════════════════════════════════════════ */
+    .lb-header { padding: 16px 20px; }
+    .lb-header h2 { font-size: 22px; font-weight: 900; color: var(--white); }
+    .lb-header p { font-size: 13px; color: var(--lgray); margin-top: 4px; }
+    .podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; padding: 10px 20px 20px; }
+    .podium-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .pod-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: white; border: 3px solid transparent; }
+    .pod-rank { font-size: 18px; font-weight: 900; }
+    .pod-name { font-size: 11px; font-weight: 700; color: var(--white); text-align: center; }
+    .pod-xp { font-size: 10px; color: var(--lgray); }
+    .pod-block { border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; }
+    .pod-block-1 { width: 90px; height: 90px; background: linear-gradient(135deg, #D4AF37, #FFD700); }
+    .pod-block-2 { width: 80px; height: 65px; background: linear-gradient(135deg, #A8A9AD, #C0C0C0); }
+    .pod-block-3 { width: 80px; height: 50px; background: linear-gradient(135deg, #CD7F32, #B87333); }
+    .lb-list { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+    .lb-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); }
+    .lb-item.me { border-color: var(--orange); background: var(--orange-dim2); }
+    .lb-rank { width: 28px; font-size: 14px; font-weight: 900; color: var(--lgray); text-align: center; }
+    .lb-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: white; }
+    .lb-info { flex: 1; }
+    .lb-name { font-size: 14px; font-weight: 700; color: var(--white); }
+    .lb-events { font-size: 11px; color: var(--lgray); margin-top: 1px; }
+    .lb-xp { font-size: 15px; font-weight: 900; color: var(--orange); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       UTILITY
+    ═══════════════════════════════════════════════════════════════════ */
+    .mt8 { margin-top: 8px; } .mt12 { margin-top: 12px; } .mt16 { margin-top: 16px; } .mt20 { margin-top: 20px; }
+    .mb20 { margin-bottom: 20px; }
+    .px20 { padding: 0 20px; }
+    .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    .see-all { font-size: 12px; font-weight: 700; color: var(--orange); background: none; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div class="device-wrapper">
+  <div class="app-shell">
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="status-icons">
+        <svg viewBox="0 0 24 24"><path d="M1 6l11 11L23 6"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="3" height="11" rx="1"/><rect x="7" y="4" width="3" height="14" rx="1"/><rect x="12" y="1" width="3" height="17" rx="1"/><rect x="17" y="4" width="3" height="14" rx="1" opacity=".4"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="11" rx="2" stroke-width="1.5" stroke="white" fill="none"/><path d="M22 11v3" stroke="white" stroke-width="2" stroke-linecap="round"/><rect x="4" y="9" width="10" height="7" rx="1" fill="white"/></svg>
+      </div>
+    </div>
+
+    <!-- Screen Container -->
+    <div class="screen-container">
+
+      <!-- ══════════════════════════════════════════
+           S1: WELCOME
+      ══════════════════════════════════════════ -->
+      <section class="screen active" id="s-welcome" style="overflow:hidden;">
+        <div class="welcome-bg"></div>
+        <div class="welcome-nodes" id="welcomeNodes"></div>
+
+        <div class="welcome-content" style="padding:24px 28px; position:relative; z-index:2;">
+          <div class="welcome-logo">
+            <div class="logo-spark">
+              <svg viewBox="0 0 24 24"><path fill="white" d="M13 2L4.5 13.5H11L10 22L20.5 9H14L13 2z"/></svg>
+            </div>
+            <div class="logo-name">Social<span>Spark</span></div>
+          </div>
+
+          <div class="welcome-headline">Your Social<br>Fitness<br><em>Starts Here.</em></div>
+          <div class="welcome-sub">Join events. Make real friends. Build social habits — one experience at a time.</div>
+
+          <div class="welcome-stats">
+            <div>
+              <div class="w-stat-val">24K+</div>
+              <div class="w-stat-lbl">Active Members</div>
+            </div>
+            <div class="welcome-divider"></div>
+            <div>
+              <div class="w-stat-val">840+</div>
+              <div class="w-stat-lbl">Events Monthly</div>
+            </div>
+            <div class="welcome-divider"></div>
+            <div>
+              <div class="w-stat-val">4.9★</div>
+              <div class="w-stat-lbl">Community Score</div>
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="showScreen('s-interests')" style="margin-bottom:12px;">
+            Get Started — It's Free
+          </button>
+          <button class="btn-ghost" onclick="skipOnboarding()">Sign In</button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S2: INTERESTS
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-interests">
+        <div class="onb-header" style="padding-top:24px;">
+          <div class="section-label">Step 1 of 2</div>
+          <h2>What are you<br>into?</h2>
+          <p>Pick at least 3 interests — we'll find the right events for you.</p>
+        </div>
+
+        <div class="interests-grid">
+          <!-- Tags injected by JS -->
+        </div>
+
+        <div style="height:100px;"></div>
+        <div class="onb-sticky" style="position:sticky; bottom:0; background:var(--bg);">
+          <div id="selectedCount" style="font-size:12px; color:var(--lgray); margin-bottom:10px; text-align:center;">Select at least 3 interests</div>
+          <button class="btn-primary" id="continueBtn" onclick="showScreen('s-home')" disabled style="opacity:0.4;">
+            Find My Events
+          </button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S3: HOME
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-home">
+        <!-- Header -->
+        <div class="home-header">
+          <div>
+            <div class="home-greeting">Good evening,</div>
+            <div class="home-name">Mahib Khan 👋</div>
+          </div>
+          <div class="notif-btn" onclick="showToast('3 new events near you!')">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <div class="notif-dot"></div>
+          </div>
+        </div>
+
+        <!-- XP Banner -->
+        <div class="xp-banner">
+          <div class="xp-top">
+            <div>
+              <div class="xp-label">Social XP</div>
+              <div class="xp-num">1,240 <span style="font-size:14px; color:var(--lgray);">XP</span></div>
+              <div class="xp-sub">360 XP to Level 9</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="level-badge">Level 8</div>
+              <div style="font-size:11px; color:var(--lgray); margin-top:6px;">Sparker</div>
+            </div>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" style="width:78%"></div>
+          </div>
+        </div>
+
+        <!-- Weekly Quest -->
+        <div class="quest-card" onclick="showScreen('s-leaderboard')">
+          <div class="quest-header">
+            <div class="quest-title">Weekly Social Quest</div>
+            <div class="badge badge-orange">+250 XP</div>
+          </div>
+          <div class="quest-items">
+            <div class="quest-item">
+              <div class="quest-check done">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="quest-item-text done">Attend 1 event</span>
+            </div>
+            <div class="quest-item">
+              <div class="quest-check done">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="quest-item-text done">Meet someone new</span>
+            </div>
+            <div class="quest-item">
+              <div class="quest-check"></div>
+              <span class="quest-item-text">Volunteer this week</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommended Events -->
+        <div style="padding: 0 20px; margin-bottom:8px;" class="flex-between">
+          <div class="section-title" style="margin:0;">Recommended For You</div>
+          <button class="see-all" onclick="showScreen('s-explore')">See All</button>
+        </div>
+        <div class="hscroll" id="homeEvents"></div>
+
+        <!-- Volunteer Picks -->
+        <div style="padding: 16px 20px 8px;" class="flex-between">
+          <div class="section-title" style="margin:0;">Give Back</div>
+          <button class="see-all" onclick="showScreen('s-explore')">See All</button>
+        </div>
+        <div id="volunteerCards"></div>
+
+        <div style="height:20px;"></div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S4: EXPLORE
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-explore">
+        <div style="padding:16px 20px 0; font-size:22px; font-weight:900; color:var(--white);">Discover Events</div>
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search events, interests..." id="searchInput" oninput="filterEvents()">
+        </div>
+        <div class="cat-scroll" id="catScroll"></div>
+        <div class="events-grid" id="eventsGrid"></div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S5: EVENT DETAIL (modal overlay)
+      ══════════════════════════════════════════ -->
+      <section id="s-event-detail">
+        <div class="detail-banner" id="detailBanner">
+          <button class="detail-back" onclick="closeEventDetail()">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="detail-xp-badge" id="detailXp">+50 XP</div>
+        </div>
+        <div class="detail-body" style="overflow-y:auto; max-height: calc(100% - 230px);">
+          <div class="detail-cat" id="detailCat">Category</div>
+          <div class="detail-title" id="detailTitle">Event Title</div>
+          <div class="detail-meta-row">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="detailDate">Date & Time</span>
+          </div>
+          <div class="detail-meta-row">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span id="detailLocation">Location</span>
+          </div>
+          <div class="host-row">
+            <div class="host-avatar" id="detailHostAv">R</div>
+            <div>
+              <div class="host-name" id="detailHostName">Host Name</div>
+              <div class="host-label">Event Host</div>
+            </div>
+            <div class="verified-badge">Verified</div>
+          </div>
+          <div class="detail-desc" id="detailDesc">Description goes here.</div>
+          <div class="attendee-row">
+            <div class="attendee-stack" id="detailAttendees"></div>
+            <div class="attendee-text" id="detailAttCount"></div>
+          </div>
+          <button class="btn-primary" id="joinBtn" onclick="joinEvent()">Join This Event</button>
+          <div style="height:20px;"></div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S6: QR SCAN
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-qr">
+        <div class="qr-top">
+          <button class="back-btn" onclick="showScreen('s-home')">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="qr-header-title">Verify Attendance</div>
+          <div style="width:38px;"></div>
+        </div>
+
+        <div id="qrScanView" style="display:flex; flex-direction:column; align-items:center; flex:1;">
+          <div class="qr-viewfinder">
+            <div class="qr-frame">
+              <div class="qr-scan-line"></div>
+              <div class="qr-corner tl"></div>
+              <div class="qr-corner tr"></div>
+              <div class="qr-corner bl"></div>
+              <div class="qr-corner br"></div>
+              <div class="qr-inner-pattern" id="qrPattern"></div>
+            </div>
+          </div>
+          <div class="qr-info">
+            <h3>Point at Host's QR Code</h3>
+            <p>Ask your event host to show their QR code. Scanning confirms your attendance and awards your XP.</p>
+          </div>
+          <div style="padding:20px; width:100%; margin-top: auto;">
+            <button class="btn-primary" onclick="simulateScan()">Simulate QR Scan</button>
+            <div style="text-align:center; margin-top:12px; font-size:12px; color:var(--gray);">Demo mode — tap to simulate a successful scan</div>
+          </div>
+        </div>
+
+        <div id="qrSuccessView" class="qr-success">
+          <div class="success-ring">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="success-xp">+50 XP</div>
+          <div class="success-label">Attendance Verified!</div>
+          <div class="success-sub" style="margin-bottom:28px;">You've checked into Photography Walk. Your Social Fitness Score has been updated.</div>
+          <button class="btn-primary" onclick="showScreen('s-home')">Back to Home</button>
+          <button class="btn-ghost" style="margin-top:10px;" onclick="showScreen('s-profile')">View My Score</button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S7: PROFILE
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-profile">
+        <div class="profile-header">
+          <div class="profile-avatar" style="position:relative;">
+            M
+            <div class="profile-verified">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div>
+            <div class="profile-name">Mahib Khan</div>
+            <div class="profile-handle">@mahib.sparks  •  Bangalore</div>
+          </div>
+          <div class="profile-settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+        </div>
+
+        <!-- Social Fitness Score -->
+        <div class="score-section">
+          <div class="flex-between" style="margin-bottom:16px;">
+            <div>
+              <div class="section-label" style="margin:0 0 4px;">Social Fitness Score</div>
+              <div style="font-size:12px; color:var(--lgray);">Weekly reset · This week</div>
+            </div>
+            <div class="badge badge-orange">Active Sparker</div>
+          </div>
+          <div class="score-row">
+            <div class="score-ring-container">
+              <svg width="120" height="120" class="score-ring-svg" viewBox="0 0 120 120">
+                <circle class="score-ring-bg" cx="60" cy="60" r="52" stroke-width="10"/>
+                <circle class="score-ring-val" id="scoreRing" cx="60" cy="60" r="52" stroke-width="10"
+                  stroke-dasharray="327"
+                  stroke-dashoffset="327"/>
+              </svg>
+              <div class="score-center">
+                <div class="score-num" id="scoreNumDisplay">0</div>
+                <div class="score-label">/ 100</div>
+              </div>
+            </div>
+            <div class="score-stats">
+              <div class="score-stat-item">
+                <div class="score-stat-num" style="color:var(--orange);">14</div>
+                <div class="score-stat-lbl">Events Attended</div>
+              </div>
+              <div class="score-stat-item">
+                <div class="score-stat-num" style="color:var(--green);">6h</div>
+                <div class="score-stat-lbl">Volunteer Hours</div>
+              </div>
+              <div class="score-stat-item">
+                <div class="score-stat-num" style="color:var(--blue);">23</div>
+                <div class="score-stat-lbl">Connections Made</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streak Calendar -->
+        <div class="streak-cal">
+          <div class="flex-between">
+            <div class="section-title" style="margin:0; font-size:15px;">This Week's Streak</div>
+            <div style="font-size:13px; font-weight:800; color:var(--orange);">5 Day Streak</div>
+          </div>
+          <div class="streak-days" id="streakDays"></div>
+        </div>
+
+        <!-- Achievements -->
+        <div style="padding:0 20px; margin-bottom:8px;" class="flex-between">
+          <div class="section-title" style="margin:0; font-size:15px;">Achievements</div>
+        </div>
+        <div class="achievements-row" id="achievementsRow"></div>
+
+        <div style="height:20px;"></div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S8: REWARDS
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-rewards">
+        <div style="padding:16px 20px 0; font-size:22px; font-weight:900; color:var(--white);">Rewards Store</div>
+
+        <div class="rewards-xp-header">
+          <div class="rewards-xp-label">Your Balance</div>
+          <div class="rewards-xp-num">1,240 XP</div>
+          <div class="rewards-xp-sub">You can redeem 4 rewards right now</div>
+        </div>
+
+        <div style="padding:0 20px 8px;" class="flex-between">
+          <div class="section-title" style="margin:0; font-size:15px;">Available Rewards</div>
+        </div>
+        <div class="rewards-grid" id="rewardsGrid"></div>
+      </section>
+
+      <!-- ══════════════════════════════════════════
+           S9: LEADERBOARD
+      ══════════════════════════════════════════ -->
+      <section class="screen" id="s-leaderboard">
+        <div class="lb-header">
+          <div class="section-label">Community</div>
+          <h2>Leaderboard</h2>
+          <p>Top Sparkers this week · Bangalore</p>
+        </div>
+        <div class="podium" id="podium"></div>
+        <div style="padding: 0 20px 8px;" class="flex-between">
+          <div class="section-title" style="margin:0; font-size:15px;">Full Rankings</div>
+          <div class="badge badge-orange">#7 You</div>
+        </div>
+        <div class="lb-list" id="lbList"></div>
+      </section>
+
+    </div><!-- /screen-container -->
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-btn active" id="nav-home" onclick="showScreen('s-home'); setNav(this)">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </button>
+      <button class="nav-btn" id="nav-explore" onclick="showScreen('s-explore'); setNav(this)">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Explore</span>
+      </button>
+      <button class="nav-center-btn" onclick="showScreen('s-qr'); setNav(null)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2" opacity=".5"/><rect x="19" y="18" width="2" height="3" opacity=".5"/><rect x="14" y="19" width="3" height="2" opacity=".5"/></svg>
+      </button>
+      <button class="nav-btn" id="nav-rewards" onclick="showScreen('s-rewards'); setNav(this)">
+        <svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+        <span>Rewards</span>
+      </button>
+      <button class="nav-btn" id="nav-profile" onclick="showScreen('s-profile'); setNav(this)">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════════
+
+const interests = [
+  {label:"Photography", icon:"📷"},  {label:"Football", icon:"⚽"},
+  {label:"Cooking", icon:"🍳"},       {label:"Coding", icon:"💻"},
+  {label:"Yoga", icon:"🧘"},          {label:"Music", icon:"🎸"},
+  {label:"Reading", icon:"📚"},       {label:"Volunteering", icon:"🤝"},
+  {label:"Dance", icon:"💃"},         {label:"Chess", icon:"♟"},
+  {label:"Art", icon:"🎨"},           {label:"Running", icon:"🏃"},
+  {label:"Badminton", icon:"🏸"},     {label:"Theatre", icon:"🎭"},
+  {label:"Travel", icon:"✈️"},         {label:"Board Games", icon:"🎲"},
+];
+
+const events = [
+  {id:1, title:"Photography Walk", cat:"Arts", date:"Today · 5:00 PM", location:"Cubbon Park, Bangalore", host:"Riya Sharma", hostInit:"R", attendees:12, maxAtt:20, xp:50, fee:0, desc:"Join our guided photography walk through Cubbon Park. Capture urban nature through your lens while meeting like-minded photographers. All skill levels welcome — bring your phone or camera!", color:"#E63946", tags:["Photography","Outdoor"]},
+  {id:2, title:"Chess Evening", cat:"Games", date:"Today · 7:00 PM", location:"The Book Café, Indiranagar", host:"Aryan Kapoor", hostInit:"A", attendees:8, maxAtt:16, xp:50, fee:0, desc:"Weekly chess evening for all skill levels. Play friendly matches, discuss strategy, and enjoy great company over coffee. Beginners get a quick intro session!", color:"#3B82F6", tags:["Chess","Indoor"]},
+  {id:3, title:"Cooking Workshop", cat:"Food", date:"Sat · 3:00 PM", location:"Studio Kitchen, Koramangala", host:"Priya Mehta", hostInit:"P", attendees:6, maxAtt:12, xp:50, fee:499, desc:"Learn to cook 3 authentic South Indian dishes from scratch. Includes hands-on cooking, plating tips, and you take home what you cook! Ingredients provided.", color:"#F59E0B", tags:["Cooking","Workshop"]},
+  {id:4, title:"Open Mic Night", cat:"Music", date:"Fri · 8:00 PM", location:"The Humming Tree, Indira Nagar", host:"Dev Singh", hostInit:"D", attendees:35, maxAtt:80, xp:50, fee:299, desc:"An open stage for spoken word, music, stand-up comedy, and more. Performers get 5 minutes. Audience gets a great evening!", color:"#8B5CF6", tags:["Music","Perform"]},
+  {id:5, title:"Badminton Tournament", cat:"Sports", date:"Sun · 7:00 AM", location:"BBMP Courts, Whitefield", host:"Karan Bhat", hostInit:"K", attendees:22, maxAtt:32, xp:50, fee:0, desc:"Friendly doubles tournament open to intermediate players. Bring your own racquet. Winners take home SocialSpark Gold rewards!", color:"#10B981", tags:["Sports","Tournament"]},
+  {id:6, title:"Dog Shelter Visit", cat:"Volunteer", date:"Sat · 10:00 AM", location:"CUPA Shelter, Sarjapura", host:"Ananya S.", hostInit:"A", attendees:9, maxAtt:15, xp:150, fee:0, desc:"Spend the morning caring for rescued dogs — feeding, bathing, and playing with them. Transport provided. Earn 150 XP and a Community badge.", color:"#F63B05", tags:["Volunteer","Animals"]},
+  {id:7, title:"Book Club: Ikigai", cat:"Reading", date:"Sun · 5:00 PM", location:"Atta Galatta, Koramangala", host:"Meera R.", hostInit:"M", attendees:11, maxAtt:20, xp:50, fee:0, desc:"Monthly book club — this month we're discussing Ikigai. Read beforehand or just come for the discussion. Tea and vibes guaranteed.", color:"#06B6D4", tags:["Books","Discussion"]},
+  {id:8, title:"Community Cleanup", cat:"Volunteer", date:"Sun · 7:00 AM", location:"HSR Lake, HSR Layout", host:"Rohit K.", hostInit:"R", attendees:28, maxAtt:50, xp:150, fee:0, desc:"Join 50+ Sparkers cleaning up the HSR Lake trail. Gloves and bags provided. Plant a tree, earn 150 XP, and make real friends doing real good.", color:"#22C55E", tags:["Volunteer","Environment"]},
+];
+
+const volunteers = [
+  {id:6, title:"Dog Shelter Visit", org:"CUPA Animal Shelter", date:"Sat · 10:00 AM", xp:150, color:"#F63B05"},
+  {id:8, title:"HSR Lake Cleanup", org:"Clean Bangalore Initiative", date:"Sun · 7:00 AM", xp:150, color:"#22C55E"},
+];
+
+const rewards = [
+  {title:"Free Coffee", partner:"Third Wave Coffee", cost:200, color:"#92400E"},
+  {title:"Movie Ticket", partner:"PVR Cinemas", cost:500, color:"#1D4ED8"},
+  {title:"Gym Day Pass", partner:"Cult Fit", cost:300, color:"#065F46"},
+  {title:"10% Dining", partner:"Partner Restaurants", cost:150, color:"#991B1B"},
+  {title:"Workshop Discount", partner:"SocialSpark Events", cost:400, color:"#6B21A8"},
+  {title:"Sports Store", partner:"Decathlon", cost:600, color:"#0284C7"},
+];
+
+const leaderboard = [
+  {name:"Neha Joshi",   init:"N", xp:2840, events:26, color:"#E63946"},
+  {name:"Karan Bhat",   init:"K", xp:2610, events:22, color:"#3B82F6"},
+  {name:"Priya Mehta",  init:"P", xp:2480, events:21, color:"#8B5CF6"},
+  {name:"Dev Singh",    init:"D", xp:2190, events:19, color:"#F59E0B"},
+  {name:"Ananya S.",    init:"A", xp:2050, events:18, color:"#10B981"},
+  {name:"Meera R.",     init:"M", xp:1870, events:16, color:"#06B6D4"},
+  {name:"Mahib Khan", init:"M", xp:1240, events:14, color:"#F63B05", me:true},
+  {name:"Rohit K.",     init:"R", xp:1150, events:12, color:"#22C55E"},
+  {name:"Riya Sharma",  init:"R", xp: 980, events:10, color:"#E879F9"},
+  {name:"Vikram S.",    init:"V", xp: 840, events:9,  color:"#F97316"},
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+let selectedInterests = new Set();
+let activeCategory = "All";
+let currentEventId = null;
+let joined = false;
+let scoreAnimated = false;
+
+// ═══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════
+function showScreen(id) {
+  const onboarding = ['s-welcome','s-interests'];
+  const noNav = ['s-welcome','s-interests','s-qr'];
+
+  // Close event modal first if needed
+  document.getElementById('s-event-detail').classList.remove('modal-open');
+
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active','slide-from-left');
+  });
+
+  const target = document.getElementById(id);
+  if (target) { target.classList.add('active'); }
+
+  const nav = document.getElementById('bottomNav');
+  if (noNav.includes(id)) { nav.classList.add('hidden'); }
+  else { nav.classList.remove('hidden'); }
+
+  // Special triggers
+  if (id === 's-profile' && !scoreAnimated) { animateScore(86); scoreAnimated = true; }
+  if (id === 's-qr') { resetQR(); }
+}
+
+function setNav(btn) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function skipOnboarding() {
+  showScreen('s-home');
+  document.getElementById('bottomNav').classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════════════════════════════════
+function buildInterests() {
+  const grid = document.querySelector('.interests-grid');
+  interests.forEach(({label, icon}) => {
+    const tag = document.createElement('div');
+    tag.className = 'interest-tag';
+    tag.innerHTML = `<span class="interest-icon">${icon}</span>${label}`;
+    tag.onclick = () => {
+      if (selectedInterests.has(label)) {
+        selectedInterests.delete(label);
+        tag.classList.remove('selected');
+      } else {
+        selectedInterests.add(label);
+        tag.classList.add('selected');
+      }
+      updateContinueBtn();
+    };
+    grid.appendChild(tag);
+  });
+}
+
+function updateContinueBtn() {
+  const count = selectedInterests.size;
+  const btn = document.getElementById('continueBtn');
+  const lbl = document.getElementById('selectedCount');
+  if (count >= 3) {
+    btn.disabled = false; btn.style.opacity = '1';
+    lbl.textContent = `${count} interest${count !== 1 ? 's' : ''} selected`;
+    lbl.style.color = 'var(--orange)';
+  } else {
+    btn.disabled = true; btn.style.opacity = '0.4';
+    lbl.textContent = `Select ${3 - count} more interest${3 - count !== 1 ? 's' : ''}`;
+    lbl.style.color = 'var(--lgray)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// HOME SCREEN
+// ═══════════════════════════════════════════════════════════════════
+function buildHomeEvents() {
+  const container = document.getElementById('homeEvents');
+  events.slice(0,5).forEach(ev => {
+    const card = document.createElement('div');
+    card.className = 'h-event-card';
+    card.onclick = () => openEventDetail(ev.id);
+    card.innerHTML = `
+      <div class="h-event-banner" style="background:linear-gradient(135deg, ${ev.color}22, ${ev.color}44); display:flex; align-items:center; justify-content:center;">
+        <div style="font-size:40px; opacity:0.8;">${getCategoryIcon(ev.cat)}</div>
+        <div style="position:absolute; top:8px; right:8px; background:var(--orange); color:white; font-size:10px; font-weight:800; padding:3px 8px; border-radius:10px;">+${ev.xp} XP</div>
+      </div>
+      <div class="h-event-body">
+        <div class="h-event-title">${ev.title}</div>
+        <div class="h-event-meta">${ev.date}</div>
+        <div class="h-event-footer">
+          <div style="font-size:10px; color:var(--gray);">${ev.attendees}/${ev.maxAtt} joined</div>
+          <div style="font-size:10px; font-weight:800; color:${ev.fee === 0 ? 'var(--green)' : 'var(--lgray)'};">${ev.fee === 0 ? 'Free' : '₹'+ev.fee}</div>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function buildVolunteerCards() {
+  const container = document.getElementById('volunteerCards');
+  volunteers.forEach(vol => {
+    const ev = events.find(e => e.id === vol.id);
+    const card = document.createElement('div');
+    card.className = 'vol-card';
+    card.onclick = () => openEventDetail(vol.id);
+    card.innerHTML = `
+      <div class="vol-icon" style="background:${vol.color}22; border: 1px solid ${vol.color}44;">
+        <svg viewBox="0 0 24 24" style="stroke:${vol.color};"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </div>
+      <div class="vol-info">
+        <div class="vol-title">${vol.title}</div>
+        <div class="vol-meta">${vol.org}  •  ${vol.date}</div>
+      </div>
+      <div class="badge badge-orange">+${vol.xp} XP</div>`;
+    container.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPLORE SCREEN
+// ═══════════════════════════════════════════════════════════════════
+const categories = ["All","Sports","Arts","Food","Music","Games","Volunteer","Reading"];
+
+function buildExplore() {
+  // Category pills
+  const catScroll = document.getElementById('catScroll');
+  categories.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (cat === 'All' ? ' active' : '');
+    chip.textContent = cat;
+    chip.onclick = () => {
+      document.querySelectorAll('#catScroll .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeCategory = cat;
+      filterEvents();
+    };
+    catScroll.appendChild(chip);
+  });
+  filterEvents();
+}
+
+function filterEvents() {
+  const search = (document.getElementById('searchInput').value || '').toLowerCase();
+  const grid = document.getElementById('eventsGrid');
+  grid.innerHTML = '';
+  const filtered = events.filter(ev => {
+    const matchCat = activeCategory === 'All' || ev.cat === activeCategory;
+    const matchSearch = !search || ev.title.toLowerCase().includes(search) || ev.cat.toLowerCase().includes(search) || ev.location.toLowerCase().includes(search);
+    return matchCat && matchSearch;
+  });
+  filtered.forEach(ev => {
+    const card = document.createElement('div');
+    card.className = 'grid-card';
+    card.onclick = () => openEventDetail(ev.id);
+    card.innerHTML = `
+      <div class="grid-banner" style="background:linear-gradient(135deg,${ev.color}33,${ev.color}55); display:flex; align-items:center; justify-content:center; position:relative;">
+        <div style="font-size:34px;">${getCategoryIcon(ev.cat)}</div>
+        <div style="position:absolute; top:6px; right:6px; background:var(--orange); color:white; font-size:9px; font-weight:800; padding:2px 7px; border-radius:8px;">+${ev.xp} XP</div>
+      </div>
+      <div class="grid-body">
+        <div class="grid-title">${ev.title}</div>
+        <div class="grid-meta">${ev.date}</div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:10px;">
+          <span style="color:var(--gray);">${ev.attendees} going</span>
+          <span style="font-weight:800; color:${ev.fee===0?'var(--green)':'var(--lgray)'};">${ev.fee===0?'Free':'₹'+ev.fee}</span>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EVENT DETAIL
+// ═══════════════════════════════════════════════════════════════════
+function openEventDetail(id) {
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+  currentEventId = id;
+  joined = false;
+
+  document.getElementById('detailBanner').style.background = `linear-gradient(135deg, ${ev.color}55, ${ev.color}22)`;
+  document.getElementById('detailBanner').innerHTML = `
+    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:70px;">${getCategoryIcon(ev.cat)}</div>
+    <button class="detail-back" onclick="closeEventDetail()">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:white;fill:none;stroke-width:2.5;"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="detail-xp-badge">+${ev.xp} XP</div>`;
+
+  document.getElementById('detailCat').textContent = ev.cat;
+  document.getElementById('detailTitle').textContent = ev.title;
+  document.getElementById('detailDate').textContent = ev.date;
+  document.getElementById('detailLocation').textContent = ev.location;
+  document.getElementById('detailHostAv').textContent = ev.hostInit;
+  document.getElementById('detailHostName').textContent = ev.host;
+  document.getElementById('detailDesc').textContent = ev.desc;
+
+  const att = document.getElementById('detailAttendees');
+  att.innerHTML = '';
+  const colors = ['#E63946','#3B82F6','#8B5CF6','#10B981'];
+  for (let i = 0; i < Math.min(ev.attendees, 4); i++) {
+    const av = document.createElement('div');
+    av.className = 'attendee-av';
+    av.style.background = colors[i % colors.length];
+    av.textContent = String.fromCharCode(65 + i);
+    att.appendChild(av);
+  }
+  document.getElementById('detailAttCount').textContent = `${ev.attendees} people going`;
+
+  const joinBtn = document.getElementById('joinBtn');
+  joinBtn.textContent = 'Join This Event';
+  joinBtn.style.background = 'var(--orange)';
+
+  document.getElementById('s-event-detail').classList.add('modal-open');
+}
+
+function closeEventDetail() {
+  document.getElementById('s-event-detail').classList.remove('modal-open');
+}
+
+function joinEvent() {
+  const btn = document.getElementById('joinBtn');
+  if (joined) {
+    showScreen('s-qr');
+    closeEventDetail();
+    return;
+  }
+  joined = true;
+  btn.textContent = 'Joined! Scan QR to Verify';
+  btn.style.background = 'var(--green)';
+  showToast('Event joined! Scan QR at venue to earn XP.');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// QR SCAN
+// ═══════════════════════════════════════════════════════════════════
+function buildQRPattern() {
+  const pattern = document.getElementById('qrPattern');
+  if (!pattern) return;
+  pattern.innerHTML = '';
+  const rows = 7, cols = 7;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'qr-cell';
+      cell.style.opacity = Math.random() > 0.4 ? '1' : '0';
+      pattern.appendChild(cell);
+    }
+  }
+}
+
+function resetQR() {
+  document.getElementById('qrScanView').style.display = 'flex';
+  document.getElementById('qrSuccessView').style.display = 'none';
+  buildQRPattern();
+}
+
+function simulateScan() {
+  const scanView = document.getElementById('qrScanView');
+  const successView = document.getElementById('qrSuccessView');
+  scanView.style.transition = 'opacity 0.3s';
+  scanView.style.opacity = '0';
+  setTimeout(() => {
+    scanView.style.display = 'none';
+    successView.style.display = 'flex';
+    successView.style.opacity = '0';
+    successView.style.transition = 'opacity 0.4s';
+    setTimeout(() => { successView.style.opacity = '1'; }, 50);
+  }, 300);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════════════════════════
+function animateScore(target) {
+  const ring = document.getElementById('scoreRing');
+  const display = document.getElementById('scoreNumDisplay');
+  const circumference = 327;
+  const offset = circumference - (target / 100) * circumference;
+  setTimeout(() => {
+    ring.style.strokeDashoffset = offset;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += 2;
+      if (current >= target) { current = target; clearInterval(interval); }
+      display.textContent = current;
+    }, 30);
+  }, 400);
+}
+
+function buildStreak() {
+  const days = ['M','T','W','T','F','S','S'];
+  const done = [true, true, true, true, true, false, false];
+  const isToday = [false,false,false,false,true,false,false];
+  const container = document.getElementById('streakDays');
+  days.forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'streak-day' + (isToday[i] ? ' today' : done[i] ? ' done' : '');
+    div.innerHTML = `<span class="streak-day-letter">${d}</span><span>${done[i] ? '✓' : ''}</span>`;
+    container.appendChild(div);
+  });
+}
+
+function buildAchievements() {
+  const achievements = [
+    {label:"First Spark", color:"#F63B05", earned:true},
+    {label:"5-Day Streak", color:"#F59E0B", earned:true},
+    {label:"Volunteer", color:"#22C55E", earned:true},
+    {label:"10 Events", color:"#3B82F6", earned:true},
+    {label:"Community Host", color:"#8B5CF6", earned:false},
+    {label:"Top Sparker", color:"#E879F9", earned:false},
+  ];
+  const row = document.getElementById('achievementsRow');
+  achievements.forEach(ach => {
+    const el = document.createElement('div');
+    el.className = 'achievement';
+    el.innerHTML = `
+      <div class="ach-icon" style="background:${ach.earned ? ach.color+'22' : 'var(--card2)'}; border:1.5px solid ${ach.earned ? ach.color+'55' : 'var(--border)'};">
+        <svg viewBox="0 0 24 24" style="stroke:${ach.earned ? ach.color : 'var(--gray)'};">
+          <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+      </div>
+      <span class="ach-label" style="color:${ach.earned ? 'var(--lgray)' : 'var(--gray)'};">${ach.label}</span>`;
+    row.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// REWARDS
+// ═══════════════════════════════════════════════════════════════════
+function buildRewards() {
+  const grid = document.getElementById('rewardsGrid');
+  const rewardIcons = [
+    `<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>`,
+    `<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>`,
+    `<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>`,
+    `<path d="M3 11l19-9-9 19-2-8-8-2z"/>`,
+    `<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>`,
+    `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`,
+  ];
+  rewards.forEach((rw, i) => {
+    const card = document.createElement('div');
+    card.className = 'reward-card';
+    const canRedeem = 1240 >= rw.cost;
+    card.innerHTML = `
+      <div class="reward-icon" style="background:${rw.color}22; border:1px solid ${rw.color}33;">
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:${rw.color};fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;">${rewardIcons[i]}</svg>
+      </div>
+      <div class="reward-title">${rw.title}</div>
+      <div class="reward-partner">${rw.partner}</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <div class="reward-cost">${rw.cost} XP</div>
+          <div class="reward-cost-sub">to redeem</div>
+        </div>
+        <button style="background:${canRedeem ? 'var(--orange)' : 'var(--card3)'}; color:${canRedeem ? 'white' : 'var(--gray)'}; border:none; border-radius:8px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; font-family:var(--font);" onclick="redeemReward('${rw.title}', ${rw.cost}, ${canRedeem})">${canRedeem ? 'Redeem' : 'Locked'}</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function redeemReward(title, cost, canRedeem) {
+  if (canRedeem) showToast(`Redeemed: ${title}!`);
+  else showToast(`Need ${cost} XP to unlock.`);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════════════════════
+function buildLeaderboard() {
+  const podiumEl = document.getElementById('podium');
+  const top3 = leaderboard.slice(0, 3);
+  const podiumOrder = [top3[1], top3[0], top3[2]]; // 2nd, 1st, 3rd
+  const podiumClasses = ['pod-block-2','pod-block-1','pod-block-3'];
+  const ranks = ['2nd','1st','3rd'];
+
+  podiumOrder.forEach((person, i) => {
+    const item = document.createElement('div');
+    item.className = 'podium-item';
+    item.innerHTML = `
+      <div class="pod-avatar" style="background:${person.color}; ${i===1?'width:60px;height:60px;font-size:22px;':''}; border:3px solid ${i===1?'#FFD700':i===0?'#C0C0C0':'#CD7F32'};">${person.init}</div>
+      <div class="pod-name">${person.name.split(' ')[0]}</div>
+      <div class="pod-xp" style="color:var(--orange);font-weight:800;font-size:11px;">${person.xp.toLocaleString()} XP</div>
+      <div class="${podiumClasses[i]}" style="width:${i===1?90:80}px;"><span style="font-weight:900;font-size:${i===1?22:18}px;color:white;">${ranks[i]}</span></div>`;
+    podiumEl.appendChild(item);
+  });
+
+  const list = document.getElementById('lbList');
+  leaderboard.forEach((person, i) => {
+    const item = document.createElement('div');
+    item.className = 'lb-item' + (person.me ? ' me' : '');
+    item.innerHTML = `
+      <div class="lb-rank">${i + 1}</div>
+      <div class="lb-avatar" style="background:${person.color};">${person.init}</div>
+      <div class="lb-info">
+        <div class="lb-name">${person.name}${person.me ? ' <span style="font-size:10px;color:var(--orange);">(You)</span>':''}</div>
+        <div class="lb-events">${person.events} events this week</div>
+      </div>
+      <div class="lb-xp">${person.xp.toLocaleString()}</div>`;
+    list.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════
+function getCategoryIcon(cat) {
+  const map = {Arts:'🖼', Games:'♟', Food:'🍳', Music:'🎵', Sports:'🏃', Volunteer:'🤝', Reading:'📚'};
+  return map[cat] || '⚡';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// Animated network nodes on welcome screen
+function buildWelcomeNodes() {
+  const container = document.getElementById('welcomeNodes');
+  const positions = [
+    {w:80,h:80,t:'5%',l:'10%',delay:'0s'},
+    {w:50,h:50,t:'15%',l:'70%',delay:'1s'},
+    {w:100,h:100,t:'40%',l:'80%',delay:'2s'},
+    {w:60,h:60,t:'70%',l:'15%',delay:'0.5s'},
+    {w:40,h:40,t:'85%',l:'60%',delay:'1.5s'},
+  ];
+  positions.forEach(p => {
+    const node = document.createElement('div');
+    node.className = 'w-node';
+    node.style.cssText = `width:${p.w}px;height:${p.h}px;top:${p.t};left:${p.l};animation-delay:${p.delay};`;
+    container.appendChild(node);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  buildWelcomeNodes();
+  buildInterests();
+  buildHomeEvents();
+  buildVolunteerCards();
+  buildExplore();
+  buildStreak();
+  buildAchievements();
+  buildRewards();
+  buildLeaderboard();
+  buildQRPattern();
+});
+</script>
+</body>
+</html>

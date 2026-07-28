@@ -104,10 +104,14 @@ export default function App() {
 
   // ─── Static data ──────────────────────────────────────────────────
   const interestsList = [
-    { label: 'Photography', icon: '📷' }, { label: 'Football', icon: '⚽' },
-    { label: 'Cooking',     icon: '🍳' }, { label: 'Coding',   icon: '💻' },
-    { label: 'Yoga',        icon: '🧘' }, { label: 'Music',    icon: '🎸' },
-    { label: 'Reading',     icon: '📚' }, { label: 'Volunteer',icon: '🤝' }
+    { label: 'Photography', icon: '📷' }, { label: 'Football',    icon: '⚽' },
+    { label: 'Cooking',     icon: '🍳' }, { label: 'Coding',      icon: '💻' },
+    { label: 'Yoga',        icon: '🧘' }, { label: 'Music',       icon: '🎸' },
+    { label: 'Reading',     icon: '📚' }, { label: 'Volunteer',   icon: '🤝' },
+    { label: 'Dance',       icon: '💃' }, { label: 'Chess',       icon: '♟️' },
+    { label: 'Art',         icon: '🎨' }, { label: 'Running',     icon: '🏃' },
+    { label: 'Badminton',   icon: '🏸' }, { label: 'Theatre',     icon: '🎭' },
+    { label: 'Travel',      icon: '✈️'  }, { label: 'Board Games', icon: '🎲' },
   ];
 
   const rewardStoreList = [
@@ -937,6 +941,20 @@ export default function App() {
                   <button className="btn-primary" onClick={verifyAttendance}>
                     📍 Scan & Check-In
                   </button>
+                  <button
+                    onClick={() => setQrStep('success')}
+                    style={{
+                      marginTop: 10, width: '100%', padding: '13px',
+                      borderRadius: 'var(--r-md)', background: 'transparent',
+                      border: '1.5px solid var(--border)', color: 'var(--text-3)',
+                      fontSize: 13, fontWeight: 600, cursor: 'pointer'
+                    }}
+                  >
+                    Simulate QR Scan (Demo)
+                  </button>
+                  <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11, color: 'var(--text-3)' }}>
+                    Demo mode — tap to simulate a successful scan
+                  </div>
                 </div>
               </div>
             ) : (
@@ -1042,6 +1060,28 @@ export default function App() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Achievements */}
+            <div style={{ padding: '0 20px 8px' }}>
+              <div className="section-title" style={{ fontSize: 15 }}>Achievements</div>
+            </div>
+            <div className="achievements-row">
+              {[
+                { icon: '🏆', label: 'First Event',   bg: 'rgba(246,59,5,0.15)',  border: 'rgba(246,59,5,0.3)'   },
+                { icon: '🤝', label: 'Volunteer',     bg: 'rgba(34,197,94,0.15)', border: 'rgba(34,197,94,0.3)'  },
+                { icon: '🔥', label: '5 Day Streak',  bg: 'rgba(249,115,22,0.15)',border: 'rgba(249,115,22,0.3)' },
+                { icon: '🎵', label: 'Music Fan',     bg: 'rgba(139,92,246,0.15)',border: 'rgba(139,92,246,0.3)' },
+                { icon: '📚', label: 'Book Worm',     bg: 'rgba(14,165,233,0.15)',border: 'rgba(14,165,233,0.3)' },
+                { icon: '⚡', label: 'Power User',    bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.3)'  },
+              ].map((ach, i) => (
+                <div key={i} className="achievement">
+                  <div className="ach-icon" style={{ background: ach.bg, border: `1px solid ${ach.border}` }}>
+                    <span style={{ fontSize: 22 }}>{ach.icon}</span>
+                  </div>
+                  <div className="ach-label">{ach.label}</div>
+                </div>
+              ))}
             </div>
 
             {/* Logout */}
